@@ -1,6 +1,7 @@
 // выбор города
 
 const headerCityButton = document.querySelector('.header__city-button');
+let hash = location.hash.substring(1);
 
 const updateLocation = () => {
   const lsLocation = localStorage.getItem('lomoda-location');
@@ -140,8 +141,10 @@ try {
     }
   };
 
+  getGoods(renderGoodsList, hash);
+
   window.addEventListener('hashchange', () => {
-    let hash = location.hash.substring(1);
+    hash = location.hash.substring(1);
     const title = document.querySelector('.goods__title');
 
     switch (hash) {
