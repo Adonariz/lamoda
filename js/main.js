@@ -8,7 +8,7 @@ const updateLocation = () => {
 };
 
 headerCityButton.addEventListener('click', () => {
-  const city = prompt('Укажите ваш город');
+  const city = prompt('Укажите ваш город').trim();
 
   if (city !== null) {
     localStorage.setItem('lomoda-location', city);
@@ -33,8 +33,14 @@ const closeCartModal = () => {
 };
 
 const disableScroll = () => {
+  if (document.disableScroll) {
+    return;
+  }
+
   const scrollWidth = window.innerWidth - document.body.offsetWidth;
 
+  document.disableScroll = true;
+  
   document.body.dbScrollY = window.scrollY;
   document.body.style.cssText = `
     position: fixed;
@@ -48,6 +54,8 @@ const disableScroll = () => {
 };
 
 const enableScroll = () => {
+  document.disableScroll = false;
+
   document.body.style.cssText = '';
   window.scroll({
     top: document.body.dbScrollY
