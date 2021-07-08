@@ -2,20 +2,18 @@
 
 const headerCityButton = document.querySelector('.header__city-button');
 let hash = location.hash.substring(1);
+const lsLocation = localStorage.getItem('lomoda-location');
+const defaultValue = 'Ваш город?';
 
-const updateLocation = () => {
-  const lsLocation = localStorage.getItem('lomoda-location');
-  headerCityButton.textContent = lsLocation && lsLocation !== 'null' ? lsLocation : 'Ваш город?';
-};
+headerCityButton.textContent = lsLocation || defaultValue;
 
 headerCityButton.addEventListener('click', () => {
-  const city = prompt('Укажите ваш город').trim();
-
-  if (city !== null) {
+  const city = prompt('Укажите ваш город');
+  
+  if (city !== null && city.trim() !== '') {
+    headerCityButton.textContent = city;
     localStorage.setItem('lomoda-location', city);
   }
-  
-  updateLocation();
 });
 
 // модальное окно корзины
