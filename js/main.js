@@ -1,6 +1,14 @@
+const headerCityButton = document.querySelector('.header__city-button');
+const cartListGoods = document.querySelector('.cart__list-goods');
+const cartTotalCost = document.querySelector('.cart__total-cost');
+
+const BUY_BTN_TEXT = {
+  delete: 'Удалить из корзины',
+  add: 'Добавить в корзину'
+};
+
 // выбор города
 
-const headerCityButton = document.querySelector('.header__city-button');
 let hash = location.hash.substring(1);
 const lsLocation = localStorage.getItem('lomoda-location');
 const defaultValue = 'Ваш город?';
@@ -24,6 +32,7 @@ const cartOverlay = document.querySelector('.cart-overlay');
 const openCartModal = () => {
   cartOverlay.classList.add('cart-overlay-open');
   disableScroll();
+  renderCart();
 };
 
 const closeCartModal = () => {
@@ -190,7 +199,9 @@ try {
     }, '');
   };
 
-  const renderCardGood = ([{ brand, name, cost, color, sizes, photo }]) => {
+  const renderCardGood = ([{ id, brand, name, cost, color, sizes, photo }]) => {
+    const data = { brand, name, cost, id };
+    
     cardGoodImage.src = `goods-image/${photo}`;
     cardGoodImage.alt = `${brand} ${name}`;
     cardGoodBrand.textContent = brand;
@@ -210,8 +221,38 @@ try {
       cardGoodSizes.dataset.id = 0;
       cardGoodSizesList.innerHTML = generateList(sizes);
     } else {
-      cardGoodColor.style.display = 'none';
+      cardGoodSizes.style.display = 'none';
     }
+
+    if (getLocalStorage().some(item => item.id === id)) {
+      cardGoodBuy.classList.add('delete');
+      cardGoodBuy.textContent = BUY_BTN_TEXT.delete;
+    }
+
+    cardGoodBuy.addEventListener('click', () => {
+      if (cardGoodBuy.classList.contains('delete')) {
+        deleteCartItem(id);
+        cardGoodBuy.classList.remove('delete');
+        cardGoodBuy.textContent = BUY_BTN_TEXT.add;
+        
+        return;
+      }
+      
+      if (color) {
+        data.color = cardGoodColor.textContent;
+      }
+  
+      if (sizes) {
+        data.size = cardGoodSizes.textContent;
+      }
+
+      cardGoodBuy.classList.add('delete');
+      cardGoodBuy.textContent = BUY_BTN_TEXT.delete;
+
+      const cardData = getLocalStorage();
+      cardData.push(data);
+      setLocalStorage(cardData);
+    });
   };
   
   cardGoodSelectWrapper.forEach(item => {
@@ -237,6 +278,48 @@ try {
   console.warn(err);
 }
 
+// работа корзины
+
+const getLocalStorage = () => {
+  return JSON?.parse(localStorage.getItem('cart-lomoda')) || [];
+};
+
+const setLocalStorage = (data) => {
+  localStorage.setItem('cart-lomoda', JSON.stringify(data));
+};
+
+const renderCart = () => {
+  cartListGoods.textContent = '';
+  cartTotalCost.textContent = '';
+
+  const cartItems = getLocalStorage();
+  let totalPrice = 0;
+
+  cartItems.forEach((item, i) => {
+    const tableRow = document.createElement('tr');
+    tableRow.innerHTML = 
+    `
+      <td>${++i}</td>
+      <td>${item.brand} ${item.name}</td>
+      ${item.color ? `<td>${item.color}</td>` : `<td>-</td>`}
+      ${item.size ? `<td>${item.size}</td>` : `<td>-</td>`}
+      <td>${item.cost} &#8381;</td>
+      <td><button class="btn-delete" data-id="${item.id}">&times;</button></td>
+    `;
+
+    totalPrice += item.cost;
+    cartListGoods.append(tableRow);
+  });
+
+  cartTotalCost.textContent = `${totalPrice} ₽`;
+};
+
+const deleteCartItem = (id) => {
+  const cartItems = getLocalStorage();
+  const newCartItems = cartItems.filter(item => item.id !== id);
+  setLocalStorage(newCartItems);
+};
+
 // слушатели
 
 subheaderCart.addEventListener('click', openCartModal);
@@ -246,6 +329,15 @@ cartOverlay.addEventListener('click', (evt) => {
 
   if (target.classList.contains('cart__btn-close') || target.matches('.cart-overlay')) {
     closeCartModal();
+  }
+});
+
+cartListGoods.addEventListener('click', (evt) => {
+  const target = evt.target;
+
+  if (target.matches('.btn-delete')) {
+    deleteCartItem(target.dataset.id);
+    renderCart();
   }
 });
 
